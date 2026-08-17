@@ -1,1 +1,64 @@
-start
+day 01
+
+ansible
+
+---
+- name: Install httpd server
+  hosts:all
+  become:yes
+
+  tasks:
+    - name: Install  httpd
+      yum:
+        name:apache
+        state: present
+
+terraform 
+
+provider "aws"{
+    region ="us-east-1"
+}
+
+resource "aws_instane" "name"{
+    ami ="ami-aa"
+    instance_type ="c7i.flex.xlarge"
+
+    tags={
+        Name="name"
+    }
+}
+
+kubernetes yaml
+
+apiVersion :v1
+kind: pod 
+metadata:
+  name: sha-pod
+spec:
+  containers:
+    - name:web
+      image: nginx:latest
+      ports:
+        - containePort:80
+
+shell script
+
+#!/bin/bash
+
+echo "Date: $(DATE)"
+echo "Hostname: $(hostname)"
+
+ADO pipelinr
+
+trigger:
+ - main
+
+pool:
+  name: self-hosted
+
+steps:
+  - checkout: none
+  - script: |
+      git clone -b main "github"
+      ls -la sample-java
+    displayName: 'checkout and list file'

@@ -1,0 +1,210 @@
+ansible
+
+---
+ - name: install nginx on server
+   hosts: all
+   become: yes
+
+   tasks:
+    - name: instal nginx 
+      yum:
+        name: nginx
+        state: present
+
+    - name: enable nginx
+       service:
+          name: nginx
+          state: started
+          enable: yes
+
+
+k8s deployment-----
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shakeer-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shakeer-app
+  template:
+    metadata:
+      labels:
+        app: shakeer-app
+    spec:
+      containers:
+        - name: shakeer
+          image: nginx
+          ports:
+            - containerPort: 80
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shakeer-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shakeer-app
+  template:
+    metadata:
+      labels:
+        app: shakeer-app
+    spec:
+      container:
+        - name: shakeer
+          image: nginx
+          ports:
+            - containerPort: 80
+
+bash script
+
+#!bin/bash
+
+df -h
+
+ADO pipeline
+
+trigger:
+  - main   
+
+pool:
+  name: Self-hosted
+
+stages:
+- stage: Build
+  displayName: Build
+  jobs:
+  - job: MavenBuild
+    displayName: MavenBuild
+    steps:
+
+    - checkout: Self
+    - task: Maven@4
+      displayName: Maven Compile
+      inputs: 
+        mavenpomFile: 'pom.xms'
+        goals: 'clean compile'
+        jdkVersionoptionL '1.11'
+        publishjunitresult: false
+
+- stage:  Test
+  displayName: Test
+  dependsOn: Build
+  jobs:
+  - job: maventest
+    displayName: maven Test
+    steps:
+    - checkout: Self
+    - task: maven@4
+
+
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+
+# =========================
+# BUILD
+# =========================
+- stage: Build
+  displayName: Build
+  jobs:
+  - job: MavenBuild
+    displayName: Maven Build
+    steps:
+
+    - checkout: self
+
+    - task: Maven@4
+      displayName: Maven Compile
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean compile'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
+        publishJUnitResults: false
+
+
+# =========================
+# TEST
+# =========================
+- stage: Test
+  displayName: Test
+  dependsOn: Build
+  jobs:
+  - job: MavenTest
+    displayName: Maven Test
+    steps:
+
+    - checkout: self
+
+    - task: Maven@4
+      displayName: Maven Test
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'test'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+
+# =========================
+# PACKAGE
+# =========================
+- stage: Package
+  displayName: Package
+  dependsOn: Test
+  jobs:
+  - job: MavenPackage
+    displayName: Maven Package
+    steps:
+
+    - checkout: self
+
+    - task: Maven@4
+      displayName: Maven Package
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean package'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+
+
+pipeline{
+    agents any
+    tools{
+        maven 'maven 80'
+        jdk'jdk'
+    }
+    stages{
+        stage(checkout){
+            steps{
+                git url "url"
+
+            }
+        }
+        stage{
+            steps('complie'){
+                sh 'maven compile'
+            }
+        }
+        stage{
+            steps('package'){
+                sh 'maven package'
+            }
+        }
+    }
+}

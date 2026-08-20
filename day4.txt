@@ -1,0 +1,90 @@
+
+  
+---
+- name: Install package for server
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: install tools
+        yum:
+          name:
+            - git
+            - wget
+          state: present
+
+
+## 🔹 Kubernetes — Create ClusterIP Service
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: pathnex-service
+spec:
+  selector:
+    app: pathnex-app
+  ports:
+    - port: 80
+      targetPort: 80
+
+apiVersion: v1
+kind: service
+metadata:
+  name: sha-service
+
+spec:
+  type: LoadBalancer
+  selector:
+    app: sha-app
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+
+
+
+
+ADO pipeline
+
+
+
+trigger:
+- main
+pool:
+  name: self-hosted
+
+stages: 
+  - stage: BUildtest
+    displayName: Build and test
+
+    jobs: 
+    - job: MavenBuild
+      displayName: maven Build
+      steps:
+      - chechkout: self
+      - task: JavaToolInstall@0
+        inputs:
+          versionSpec: '17'
+          jdkArchitectureOption: 'x64'
+          jdksource: 'Preinstalled'
+  
+      - script: |
+          mvn clean complie
+        workingDirectory: sample-java-app
+        displayName: maven complie
+    - job: maventest
+      displayName: maven test
+      dependsOn: maven Build
+      steps:
+      - chechkout: self
+
+      - task: JavaToolInstall
+        inputs:
+          versionSpec: '7'
+          jdkArchitectureOption: 'x64'
+      - script: |
+          mvn test
+
+        workingDirectory: sampele-java-app
+        displayName: maven test
+      

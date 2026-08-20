@@ -1,0 +1,163 @@
+# Day 03 — Users, SGs, Env Vars
+
+## 🔹 Ansible — Create User
+---
+- name : create user
+  hosts: all
+  become:yes
+
+  tasks:
+    - name: create user 
+      user:
+        name: shakeer
+        shell: /bin/bash
+
+
+
+## 🔹 Terraform — Security Group (r6i.4xlarge EC2)
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_security_group" "PathnexSG" {
+  name        = "PathnexSG"
+  description = "Pathnex SG for SSH"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "PathnexEC2" {
+  ami                    = "ami-0abcd1234abcd1234"
+  instance_type          = "r6i.4xlarge"
+  vpc_security_group_ids = [aws_security_group.PathnexSG.id]
+
+  tags = {
+    Name = "Pathnex-EC2"
+  }
+}
+
+
+## 🔹 Kubernetes — Add Environment Variables
+
+apiVersion: v2
+kind: pod
+metadata: 
+  name: ev-pod
+
+spec:
+  containers:
+    - name: app
+      image: ngnx
+      env:
+        - name : APP_ENV
+          value: "prodution"
+
+
+
+
+
+## 🔹 Shell Script — Check File Exists
+
+#!/bin/bash
+FILE="/tmp/pathnex.txt"
+
+if [ -f "$FILE" ]; then
+  echo "File exists"
+else
+  echo "File does not exist"
+fi
+
+
+
+#!bin/bash 
+
+FILE="/TMP/A.TXT"
+
+if [ - "$FILE"]; then 
+  echo "file exist"
+else 
+  echo "file not exist"
+
+fi
+
+ADO pipeline
+
+trigger:
+- main
+
+pool:
+  name: self-hosted
+
+stages:
+- stage:
+  displayName: Install dependncies
+  jobs:
+  - job: NodeInstall
+    steps:
+    - chechkout: self
+
+    - task: NodeToll@0
+      inputs:
+        versionSpec: '23.xx'
+      displayName: Install node.jobs
+
+    - script: |
+        npm install
+      workingDirectory: sample-node-app
+      displayName: npm instal
+
+- stage: test
+  displayName: run tests
+  dependson: install
+  jobs:
+  - job: nodetset
+    steps:
+    - taskL Nodetool@0
+      inputs:
+        versionSpec: '12/xm'
+
+    - script: |
+        npm install
+        npm test
+
+- stage: Build
+  displayName:buils app
+  dependsOn: test
+  jobs:
+  - job: Nodebuild
+    steps:
+    - task: nidebuils @0
+      inputs:
+        versionSpec:'2.xx'
+    -script: |
+      npm install
+      npm Build
+
+
+
+jenkins-----
+
+pipeline{
+    agent any
+    tools{
+        nodejs
+    }
+    stages{
+        stage('checkou'){
+            steps{
+                git url("aa")
+            }
+        }
+        stage('install'){
+            steps{
+                sh 'npm insatll'
+            }
+        }
+    }
+}

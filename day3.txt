@@ -161,3 +161,57 @@ pipeline{
         }
     }
 }
+
+
+Day 03 — Ansible, Terraform & Kubernetes Basics
+🔹 Ansible — Install Apache and Start Service
+- name: Install and Start Apache
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install apache
+      yum:
+        name: httpd
+        state: present
+
+    - name: Start apache
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+🔹 Kubernetes — Create a ReplicaSet with 3 Replicas
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: pathnex-replicaset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pathnex-app
+  template:
+    metadata:
+      labels:
+        app: pathnex-app
+    spec:
+      containers:
+        - name: app
+          image: nginx
+          ports:
+            - containerPort: 80
+
+#!bin/bash 
+
+echo "current user: $(whoami)"
+echo "current user group: $(groups)"
+
+
+
+dockerfile
+
+
+FROM nginx:latest
+COPY index.html usr/share/nginx/html/index.html
+EXPOSE 80
+CMD["nginx", "-g","deamon off;"]

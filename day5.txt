@@ -1,0 +1,86 @@
+## 🔹 Ansible — Handler to Restart Nginx
+
+--- 
+- name: Manage Nginx
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update config file
+      copy:
+        src: index.html
+        dest: usr/share/nginx/html/index/html
+      notify: Restart Nginx
+  handlers:
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
+
+k8s manifest
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pathnex-limited-pod
+spec:
+  containers:
+    - name: app
+      image: nginx
+      resources:
+        limits:
+          memory: "256Mi"
+          cpu: "500m"
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: nginx
+
+  template:
+    metadata:
+      labels:
+        app: nginx
+        environment: production
+
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+
+
+ADO pipeline
+
+trigger:
+  - main
+Variables:
+  env: 'sha'
+pool:
+  name: self-hosted
+
+stages:
+  - stage: Build
+    displayName: Build
+    jobs: 
+      - job: Build
+        displayName: maven Build
+        steps:
+          - chechkout: NodeInstall
+          - script: |
+              git clone http://github.com/java-app
+              cd java-app
+              echo " Welcome to $(env)"
+              mvn clean package -Dinstitute.name=$(env)
+            displayName: "welcome"
+

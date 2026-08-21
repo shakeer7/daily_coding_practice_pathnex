@@ -84,3 +84,9 @@ stages:
               mvn clean package -Dinstitute.name=$(env)
             displayName: "welcome"
 
+
+python scipt for git
+
+import subprocess
+
+subprocess.run["git","add","."]

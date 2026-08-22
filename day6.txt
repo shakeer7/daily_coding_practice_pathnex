@@ -1,0 +1,29 @@
+---
+- name: install Nginx
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: insatll Nginx
+      yum:
+        name: nginx
+        state: present
+inventory file
+
+[webservers]
+192.0.0.1 user private_key= /home/user/key.pem
+
+
+
+manifest
+
+apiVersion: v1
+kind: pod
+metadata:
+  name: sha-pod
+spec:
+  containers:
+    - name: app
+      image: nginx
+      
+      

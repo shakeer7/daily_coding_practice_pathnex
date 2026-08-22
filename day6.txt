@@ -36,3 +36,4 @@ do
     echo "$service is not running"
   fi
 done
+

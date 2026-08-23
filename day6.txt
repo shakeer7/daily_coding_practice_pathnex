@@ -40,12 +40,12 @@ done
 multistage docker file
 
 FROM python:3.10-slim AS builder
-
 WORKDIR /app
-
 COPY requirements.txt
 copy src ./src
 RUN pip install --no-cache-dir -r requirements.txt
+
+
 FROM python:3.10-slim
 
 WORKDIR /app
@@ -55,3 +55,6 @@ COPY --from=builder /app/src ./src
 EXPOSE 8080
 
 ENTRYPOINT["python", "src/app.py"]
+
+docker build -t app.py .
+docker run -d -p 8080:8080 --name py-app app.py

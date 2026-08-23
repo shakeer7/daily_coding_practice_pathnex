@@ -1,0 +1,72 @@
+install nginx
+
+---
+- name: Install Nginx on server
+  hosts: all
+  become: true
+  tasks:
+    - name: Install Nginx
+      yum: 
+       name: Nginx
+       state: present
+    - name: start Nginx server
+      service:
+        name: Nginx
+        state: started
+        enabled: true
+
+resource "aws_ec2_insatnce" "sha"{
+    ami = "amixx"
+    instance_type="t3.micro"
+
+}
+
+
+apiVersion: v1
+kind:Deployment
+metadata:
+  name: sha-app
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: sha
+  template:
+    metadata:
+    labels:
+      app: sha
+    spec:
+      containers:
+        - name: sha-app
+          image: Nginx <xxxxx.dkr.ecr.ap-south-1.aws.com>
+          ports:
+            - containePort:80
+
+
+apiVersion:v1
+kind: Deployment
+metadata:
+  - name: sha-app
+spec:
+  replicas:2
+  selector:
+    matchLabels: 
+      app:sha
+    
+  template:
+    metadata:
+      labels:
+      app: sha
+    spec:
+      containers:
+        - name: sha-app
+          image: xxx.dkr.ecr.aws.com
+          ports:
+            - containePort: 8080
+
+#!/bin/bash
+echo "current date:"
+date
+echo "system uptime"
+uptime

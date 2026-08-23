@@ -41,7 +41,7 @@ spec:
         - name: sha-app
           image: Nginx <xxxxx.dkr.ecr.ap-south-1.aws.com>
           ports:
-            - containePort:80
+            - containerPort:80
 
 
 apiVersion:v1
@@ -70,3 +70,27 @@ echo "current date:"
 date
 echo "system uptime"
 uptime
+\
+
+
+ado  pipeline
+
+trigger:
+  - main
+Variables:
+  name: 'sha'
+  env: 'dev'
+
+pool:
+  name: self
+stages:
+  - stage: Deploy
+    displayName: deployment
+    jobs:
+      - job: Deploy
+        displayName: deploy app
+        steps: 
+          - script: |
+              echo "deployment to $(env) by $(name)
+
+

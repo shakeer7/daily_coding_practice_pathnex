@@ -94,3 +94,15 @@ stages:
               echo "deployment to $(env) by $(name)
 
 
+trigger:
+
+variables:
+
+pool:
+
+stages:
+  - stage:
+    jobs:
+      - job:
+        steps:
+          - script:

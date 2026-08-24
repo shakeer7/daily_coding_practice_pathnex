@@ -1,0 +1,89 @@
+ansible
+
+
+---
+- name: install packages
+  hosts: all
+  become: true
+
+  vars: 
+    install package:
+     - tree 
+     - unzip
+     - vim  
+  tasks:
+    - name: install required packages
+      yum:
+        name: '{{sahkeer}}'
+        state: present
+
+
+kubernetes liveness and readiness probes
+
+
+
+apiVersion: app/v1
+kind: pod
+metadata:
+  name: sha-pod
+spec:
+  containers:
+    - name: sha-pod
+      image: nginx
+      livenessProbe:
+        httpGet:
+          path:/
+          port: 80
+        initialDelayseconds:5
+      readinessProbe:
+        httpGet:
+          path:/
+          port:80
+        initialDelayseconds: 5
+
+#!/bin/bash
+
+for item in sha ; do
+  echo "items: $item"
+done
+    
+    
+ADO pipeline
+
+
+trigger:
+  - main
+variables:
+  env= 'dev'
+
+stages:
+  - stage: Build
+    displayName: Build
+
+    jobs:
+      - job:Build
+        displayName: build
+
+        pool:
+          name: self
+
+        steps:
+          - chechkout: self
+
+          - task: maven@4
+            displayName: 'Maven Complie'
+            inputs:
+              mavenPomFIle: 'pom.xml'
+  - stage: Deploy
+    displayName: deploy
+    jobs:
+      - job: Deploy
+        displayName: deploy app
+
+        pool:
+          name: self
+
+        steps:
+          - script: |
+              echo "deploying to $env"
+            displayName

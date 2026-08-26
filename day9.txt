@@ -1,0 +1,31 @@
+ansible copy module
+
+---
+- name: copy module
+  hosts: all
+  become: true
+
+  tasks:
+    - name: copy module
+      template:
+        src: sha.jdksource
+        dest: /etc/share/
+
+
+configmao yaml
+
+apiVersion: app/v1
+kind: ConfigMap
+metadata:
+  name: production crediantal
+
+data:
+   env: 'prod'
+   name:' welcome' 
+
+
+
+bash scipt of Load
+
+Load=$('uptime' | awk '{print $10}')
+echo= 'the load is $Load'

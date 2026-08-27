@@ -1,0 +1,59 @@
+ansible
+
+--- 
+- name: Install htop
+  hosts: all
+  become: true
+
+  tasks:
+    - name: install htop
+      yum:
+        name: htop
+        service: started
+      when ansible_facts['os_module']=="Redhat" 
+
+
+secret manifest
+
+apiVersion: app/v1
+kind: secret
+metadata:
+  name: sha-secret
+type: opaque
+data:
+  password: qwerty
+
+
+bash script
+
+for i in range {1..10}; do
+ echo " number: $i"
+done
+
+
+ADO pipepline
+
+trigger:
+  - main
+
+pool:
+  name: slef
+
+stages:
+  - stage: build
+    displayName: build 
+
+    jobs:
+     - job: build
+       displayName: maven build
+
+
+       steps:
+         - chechkout: Self
+         - task: Maven@4
+           displayName: maven compile
+           inputs:
+             mavenpomfile: 'pom.xml'
+             goal: 'clean complie'
+             
+

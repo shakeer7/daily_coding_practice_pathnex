@@ -1,0 +1,117 @@
+ansible
+
+--- 
+- name: Install mariadb
+  hosts: all
+  become: true
+
+  tasks:
+    - name: insatll mariadb
+      yum: 
+        name: mariadb
+        state: present
+
+    - name: 
+      service:
+        name: mariadb
+        state: started
+
+
+
+#install helm
+
+---
+- name: install helm package
+  hosts: all
+  become: true
+
+  tasks:
+    - name: install helm
+      get_url:
+      url: https://
+      dest: /tmp/helm.tar.gz
+
+    - name: Extarct helm
+      unarchive:
+        src: /tmp/helm/tar/gz
+        dest: usr/local/bin/
+        remote_src: yes
+
+    - name: helm permissions
+      
+kubernetes manifest
+
+apiVersion: app/v2
+kind: pod
+metadata: 
+  - name: sidecar
+spec:
+  containers:
+    - name: main
+      image: Nginx
+    - name: sidecar
+      image: busybox
+      command: ["sh","-c", "echo", sleep 3600s]
+
+
+ADO pipeline
+
+
+trigger:
+- main
+variables:
+  imageName: 'web-app'
+  dockerRegistery: '$(ACR_LOGIN_SERVER)'
+  imageTAG: '$(Build.BuildId)'
+
+stages:
+  - stage: build
+    displayName: build docker image
+
+    jobs:
+      - job: build 
+        displayName: docker build
+        pool: 
+          name: slef
+
+        steps:
+          - checkout: Self
+          - task: Docker@2
+            displayName: docker build
+            inputs: 
+              command: build
+              repository: $(imageName)
+              Dockerfile: '**/dockerfile'
+              tags: |
+                $(imageTAG)
+  - stage: push 
+    dependsOn: build
+      jobs:
+        - job: push
+          steps: 
+          -scipt: |
+             docker login: $(ACR_LOGIN_SERVER) \
+               -u $(ACR_USERNAME)\
+               -p $(ACR_PASSWord)
+
+             docker tag
+
+
+
+
+trigger:
+- main
+
+pool: 
+  name: 'self'
+
+stages:
+  - stage: build
+    displayName: build
+    jobs:
+      - job: build image
+        steps:
+          - chechkout: self
+          - task: Docker@2
+          - script: |
+              docker Build -t $(image)

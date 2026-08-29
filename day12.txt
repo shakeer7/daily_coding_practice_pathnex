@@ -1,0 +1,37 @@
+asible copy module
+
+---
+- name: config file content 
+  hosts: all
+  become: true
+
+  tasks:
+    - name: config file content
+      copy:
+        dest: /etc/sha.conf
+        content: |
+          hello
+
+apiVersion: app/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  startegy:
+    type: RollingUpdate
+    rollingupdate:
+      maxSurge: 1
+      maxUnavialable: 1
+  selectors:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels: 
+        app: frontend
+    spec:
+      container:
+        - name: frontend
+          image: myrepo/frontend:v2 (ecr image)
+          ports:
+            - containePort: 80

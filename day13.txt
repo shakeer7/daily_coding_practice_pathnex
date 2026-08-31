@@ -1,0 +1,36 @@
+apiversion: v1
+kind: secrets
+metadata: 
+  name:  nginx-secrets
+type: opaque
+data:
+  password: qwertyuio
+
+apiversion: v1
+kind: Deployment
+metadata:
+  name: sha-nginx
+spec:
+  replicas: 3
+  selectors: 
+    matchLables:
+      app: sha-nginx
+  template:
+    metadata:
+      labels:
+        app: sha-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          volumeMounts:
+            - mountpath: /etc/nginx/nginx.conf
+              name: nginx-config
+              subpath: 
+      volumes:
+        - name: nginx-config
+          configmap:
+            name: nginx-config
+        - name: nginx-secrets
+          secrets:
+            secretname: nginx-secret

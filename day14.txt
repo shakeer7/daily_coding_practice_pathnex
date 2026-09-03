@@ -1,0 +1,78 @@
+ansible task
+
+---
+
+- name: Install nginx on server
+  hosts: all
+  become: true
+
+  tasks:
+    - name: install nginx
+      apt:
+        image: nginx
+        state: present
+    - name: start nginx server
+      server:
+        name: nginx
+        state: started
+        enable: yes
+    - name: Deploy html
+      copy: 
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>My Ansible Server</title>
+          </head>
+          <body>
+            <h1>Hello from Ansible!</h1>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: '066'
+
+apiversion: app/v1
+kind: Deployment
+metadata:
+  name: nginx-Deployment
+spec:
+  replicas: 2
+  selectors:
+    matchLables:
+     app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+  spec: 
+    containers:
+      - name: nginx
+        image: nginx
+        ports:
+          - containerPort: 80
+
+
+apiversion: app/v2
+kind: service
+metadata:
+  name: app-service
+spec:
+  selectors:
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
+
+
+
+  #!/bin/bash
+
+  echo "cpu memory: "
+  top 
+  free -h
+  echo " disk: "
+  df -sh
+df tells me how much disk space is available, while du tells me which files or directories are consuming the space.

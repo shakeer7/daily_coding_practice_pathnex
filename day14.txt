@@ -75,4 +75,3 @@ spec:
   free -h
   echo " disk: "
   df -sh
-df tells me how much disk space is available, while du tells me which files or directories are consuming the space.

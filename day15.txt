@@ -1,0 +1,95 @@
+ansible 
+
+---
+
+- name: Install java on server
+  hosts: all
+  become: present
+
+  tasks:
+    - name: Install openJDK
+      apt:
+        name: java-11-openJDK
+        state: present
+    
+    - name: set java_home
+      lineinfile:
+        path: /etc/profile
+        line: 
+
+
+
+| Task                              | Command                                           |
+| --------------------------------- | ------------------------------------------------- |
+| Print specific lines              | `sed -n '10,20p' file.txt`                        |
+| Print lines matching text         | `sed -n '/error/p' app.log`                       |
+| Replace first occurrence per line | `sed 's/old/new/' file.txt`                       |
+| Replace all occurrences           | `sed 's/old/new/g' file.txt`                      |
+| Replace in-place                  | `sed -i 's/old/new/g' file.txt`                   |
+| Delete a line                     | `sed '5d' file.txt`                               |
+| Delete lines matching text        | `sed '/error/d' app.log`                          |
+| Delete blank lines                | `sed '/^$/d' file.txt`                            |
+| Add text before a line            | `sed '5i\New line' file.txt`                      |
+| Add text after a line             | `sed '5a\New line' file.txt`                      |
+| Remove comments                   | `sed '/^#/d' config.txt`                          |
+| Remove comments + blank lines     | `sed '/^#/d;/^$/d' config.txt`                    |
+| Replace only a specific line      | `sed '5s/old/new/' file.txt`                      |
+| Multiple replacements             | `sed -e 's/foo/bar/g' -e 's/dev/prod/g' file.txt` |
+
+
+sed 's/old/new/g' file
+     │ │   │   │
+     │ │   │   └── all occurrences
+     │ │   └────── new value
+     │ └────────── old value
+     └──────────── substitute
+
+sed -i 's/targetPort: 8080/targetPort: 9090/' deployment.yaml
+
+
+
+
+
+
+k8s
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: run CronJob
+spec:
+  schedule: "*/5 * * * *"
+   JobTemplate:
+     spec:
+      template:
+        spec:
+          container:
+            name: Job 
+            image: busybox
+            Command: ["sh","-c","echo job is running"]
+          restartpolicy: onfailure
+
+-------------------------------------------
+multistage docker file
+#build
+
+FROM golang:1.24 AS builder
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED go build -o myapp .
+
+#runtime
+
+FROM ubuntu-latest
+
+WORKDIR /app
+COPY --from=builder /app/myapp .
+
+EXPOSE 8080
+
+CMD["./myapp]
+---------------------------------------------
+
+

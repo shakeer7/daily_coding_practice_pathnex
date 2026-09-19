@@ -1,0 +1,136 @@
+---
+- name: Consolidated Pathnex Playbook
+  hosts: all
+  become: true
+
+  vars:
+    # Example variable for packages
+    pathnex_packages:
+      - curl
+      - vim
+
+  tasks:
+    # ==========================================
+    # 1. User & System Management
+    # ==========================================
+    - name: Create pathnex-admin user
+      user:
+        name: pathnex-admin
+        shell: /bin/bash
+        comment: "Pathnex Admin User"
+
+    - name: Create devuser
+      user:
+        name: devuser
+        comment: "Pathnex Developer User"
+
+    - name: Backup pathnex directory
+      copy:
+        src: /opt/pathnex/
+        dest: /backup/pathnex/
+        remote_src: true
+
+    # ==========================================
+    # 2. Package Installation & Dependencies
+    # ==========================================
+    - name: Install common tools (git, wget)
+      yum:
+        name:
+          - git
+          - wget
+        state: present
+
+    - name: Install required variable-defined packages
+      yum:
+        name: "{{ pathnex_packages }}"
+        state: present
+
+    - name: Install Java 11 OpenJDK
+      yum:
+        name: java-11-openjdk
+        state: present
+
+    - name: Set JAVA_HOME environment variable
+      lineinfile:
+        path: /etc/profile
+        line: export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+
+    # ==========================================
+    # 3. Application Setup
+    # ==========================================
+    - name: Clone Pathnex application repository
+      git:
+        repo: https://github.com/pathnex/app.git
+        dest: /opt/pathnex-app
+
+    # ==========================================
+    # 4. Web Server Configuration (Nginx / Httpd)
+    # ==========================================
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: present
+
+    - name: Configure Nginx server config
+      copy:
+        dest: /etc/nginx/nginx.conf
+        content: |
+          user nginx;
+          worker_processes auto;
+      notify: Restart Nginx
+
+    - name: Deploy Pathnex application index.html
+      copy:
+        src: index.html
+        dest: /usr/share/nginx/html/index.html
+      notify: Restart Nginx
+
+    - name: Deploy dynamic Pathnex configuration using template
+      template:
+        src: pathnex.conf.j2
+        dest: /etc/pathnex.conf
+
+    - name: Start and enable Nginx service
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Install HTTPD and Firewalld
+      yum:
+        name:
+          - httpd
+          - firewalld
+        state: present
+
+    - name: Start and enable HTTPD and Firewalld
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - httpd
+        - firewalld
+
+    # ==========================================
+    # 5. Database Configuration (MariaDB)
+    # ==========================================
+    - name: Install MariaDB server
+      yum:
+        name: mariadb-server
+        state: present
+
+    - name: Start and enable MariaDB
+      service:
+        name: mariadb
+        state: started
+        enabled: true
+
+  # ==========================================
+  # Handlers
+  # ==========================================
+  handlers:
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

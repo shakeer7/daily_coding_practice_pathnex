@@ -1,0 +1,320 @@
+# ==========================================
+# 1. Namespaces
+# ==========================================
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pathnex-namespace
+
+# ==========================================
+# 2. Configuration & Secrets
+# ==========================================
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pathnex-config
+data:
+  APP_MODE: "production"
+  WELCOME_MSG: "Hello Pathnex"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pathnex-secret
+type: Opaque
+data:
+  # "pathnex123" base64 encoded
+  password: cGF0aG5leDEyMw==
+
+# ==========================================
+# 3. Workloads (Deployments, StatefulSets, DaemonSets, CronJobs)
+# ==========================================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pathnex-deploy
+  namespace: pathnex-namespace
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pathnex
+  template:
+    metadata:
+      labels:
+        app: pathnex
+    spec:
+      containers:
+        - name: app
+          image: nginx
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pathnex-rolling
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: roll
+  template:
+    metadata:
+      labels:
+        app: roll
+    spec:
+      containers:
+        - name: web
+          image: nginx
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pathnex-rollout
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: rollout
+  template:
+    metadata:
+      labels:
+        app: rollout
+    spec:
+      containers:
+        - name: app
+          image: nginx
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pathnex-db
+spec:
+  serviceName: "pathnex"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pathnex-db
+  template:
+    metadata:
+      labels:
+        app: pathnex-db
+    spec:
+      containers:
+        - name: db
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "Pathnex123"
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: pathnex-daemon
+spec:
+  selector:
+    matchLabels:
+      app: ds
+  template:
+    metadata:
+      labels:
+        app: ds
+    spec:
+      containers:
+        - name: monitor
+          image: busybox
+          command: ["sh", "-c", "while true; do echo Pathnex Node Monitor; sleep 20; done"]
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pathnex-cron
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: job
+              image: busybox
+              command: ["sh", "-c", "echo Pathnex CronJob running"]
+          restartPolicy: OnFailure
+
+# ==========================================
+# 4. Networking (Services)
+# ==========================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pathnex-service
+spec:
+  selector:
+    app: pathnex-app
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pathnex-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: pathnex
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080
+
+# ==========================================
+# 5. Pods (Basic, Env, Probes, Limits, Affinity)
+# ==========================================
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pathnex-pod
+spec:
+  containers:
+    - name: web
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pathnex-env-pod
+spec:
+  containers:
+    - name: app
+      image: nginx
+      env:
+        - name: APP_ENV
+          value: "production"
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pathnex-limited-pod
+spec:
+  containers:
+    - name: app
+      image: nginx
+      resources:
+        limits:
+          memory: "256Mi"
+          cpu: "500m"
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pathnex-probe-pod
+spec:
+  containers:
+    - name: web
+      image: nginx
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 5
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 3
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pathnex-sidecar
+spec:
+  containers:
+    - name: app
+      image: nginx
+    - name: log-writer
+      image: busybox
+      command: ["sh", "-c", "while true; do echo log entry; sleep 5; done"]
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pathnex-affinity
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: disktype
+                operator: In
+                values:
+                  - ssd
+  containers:
+    - name: web
+      image: nginx
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pathnex-init
+spec:
+  initContainers:
+    - name: setup
+      image: busybox
+      command: ["sh", "-c", "echo Initializing; sleep 10"]
+  containers:
+    - name: main
+      image: nginx
+
+# ==========================================
+# 6. Autoscaling (HPA)
+# ==========================================
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pathnex-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pathnex-deploy
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50

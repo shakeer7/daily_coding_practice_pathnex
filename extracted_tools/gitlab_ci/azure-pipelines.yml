@@ -1,0 +1,144 @@
+# ==========================================
+# Consolidated Pathnex Azure Pipeline
+# ==========================================
+
+variables:
+  INSTITUTE_NAME: 'Pathnex'
+  ENVIRONMENT: 'staging'
+  SLACK_WEBHOOK: 'https://hooks.slack.com/services/XXXXX/YYYYY/ZZZZZ'
+  API_KEY: 'PLACEHOLDER_SECRET'
+  TEAM: 'DevOps'
+  ENV: 'prod'
+  PROJECT: 'WebApp'
+
+stages:
+# ==========================================
+# 1. Source Checkout & Install
+# ==========================================
+- stage: checkout_and_install
+  displayName: "Checkout and Install"
+  jobs:
+  - job: git_checkout
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        git clone https://github.com/Pathnex/sample-java-app.git
+        cd sample-java-app
+        ls -la
+      displayName: "Checkout Java App"
+  
+  - job: node_install
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: node:16
+    steps:
+    - script: |
+        git clone https://github.com/Pathnex/sample-node-app.git
+        cd sample-node-app
+        npm install
+      displayName: "Checkout and Install Node App"
+
+# ==========================================
+# 2. Build Stage
+# ==========================================
+- stage: build
+  displayName: "Build Application"
+  jobs:
+  - job: maven_build
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: maven:3.8.1-jdk-17
+    steps:
+    - script: |
+        cd sample-java-app
+        echo "Welcome to $INSTITUTE_NAME DevOps Training"
+        mvn clean package -Dinstitute.name=$INSTITUTE_NAME
+      displayName: "Maven Build & Package"
+      
+  - job: node_build
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: node:16
+    steps:
+    - script: |
+        cd sample-node-app
+        npm run build
+      displayName: "Node.js Build"
+
+  - job: docker_build
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: docker:latest
+    steps:
+    - script: |
+        docker build -t pathnex/webapp:${ENV}-${CI_PIPELINE_ID} \
+        --label "INSTITUTE_NAME=$INSTITUTE_NAME" \
+        --label "TEAM=$TEAM" \
+        --label "ENV=$ENV" \
+        --label "PROJECT=$PROJECT" .
+      displayName: "Build Docker Image"
+
+# ==========================================
+# 3. Testing Stage
+# ==========================================
+- stage: test
+  displayName: "Test Application"
+  jobs:
+  - job: maven_unit_test
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: maven:3.8.1-jdk-17
+    steps:
+    - script: |
+        cd sample-java-app
+        mvn test -Dgroup=unit || { echo "Unit Tests failed"; exit 1; }
+        echo "Unit tests completed for $INSTITUTE_NAME by $TEAM in $ENV"
+      displayName: "Maven Unit Tests"
+
+  - job: maven_integration_test
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: maven:3.8.1-jdk-17
+    steps:
+    - script: |
+        cd sample-java-app
+        mvn verify -Dgroup=integration
+        echo "Integration tests completed for $INSTITUTE_NAME by $TEAM in $ENV"
+      displayName: "Maven Integration Tests"
+      
+  - job: node_test
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: node:16
+    steps:
+    - script: |
+        cd sample-node-app
+        npm test
+      displayName: "Node.js Tests"
+
+# ==========================================
+# 4. Deployment & Promotion
+# ==========================================
+- stage: deploy
+  displayName: "Deploy Environments"
+  jobs:
+  - job: deploy_environments
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: alpine:latest
+    steps:
+    - script: |
+        echo "Deploying $INSTITUTE_NAME to Dev environment"
+        echo "Deploying $INSTITUTE_NAME to Staging environment"
+        echo "Deploying $INSTITUTE_NAME to Prod environment"
+        echo "Deploying to $ENVIRONMENT by $INSTITUTE_NAME"
+      displayName: "Deploy Applications"
+
+  - job: promote
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: alpine:latest
+    steps:
+    - script: echo "Promoting artifacts for Pathnex"
+      displayName: "Promote Artifacts"
